@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nayro Agency — Community Management & Contenu Vidéo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,700;0,900;1,700;1,900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0A0A0A;
+    --bg2: #111111;
+    --card: #161616;
+    --card2: #1E1E1E;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #FFFFFF;
+    --muted: rgba(255,255,255,0.45);
+    --muted2: rgba(255,255,255,0.65);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  ::selection { background: #fff; color: #000; }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #000; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+  @keyframes pulse-ring {
+    0%   { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── Tweaks ──────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "bannerVisible": false,
+  "heroLayout": "split",
+  "statsStyle": "large",
+  "ctaText": "Nous contacter"
+}/*EDITMODE-END*/;
+
+// ── Reveal hook ──────────────────────────────────────────
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  });
+}
+
+// ── Pill Tag ─────────────────────────────────────────────
+const Tag = ({ children, dark }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '5px 14px', borderRadius: 999,
+    background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    fontSize: 11, fontWeight: 600, letterSpacing: '0.12em',
+    textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)',
+    backdropFilter: 'blur(8px)',
+  }}>{children}</span>
+);
+
+// ── Pill Button ───────────────────────────────────────────
+const Btn = ({ children, primary, outline, onClick, href, small }) => {
+  const base = {
+    display: 'inline-flex', alignItems: 'center', gap: 8,
+    padding: small ? '10px 22px' : '14px 32px',
+    borderRadius: 999, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+    fontWeight: 600, fontSize: small ? 13 : 15, textDecoration: 'none',
+    transition: 'all 0.25s ease', userSelect: 'none', whiteSpace: 'nowrap',
+  };
+  const styles = primary
+    ? { ...base, background: '#fff', color: '#000', border: '1.5px solid #fff' }
+    : outline
+    ? { ...base, background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)' }
+    : { ...base, background: 'rgba(255,255,255,0.07)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.15)' };
+  const [hov, setHov] = useState(false);
+  const hovStyle = primary
+    ? { background: '#e8e8e8', transform: 'translateY(-1px)', boxShadow: '0 8px 24px rgba(255,255,255,0.15)' }
+    : outline
+    ? { background: 'rgba(255,255,255,0.08)', transform: 'translateY(-1px)' }
+    : { background: 'rgba(255,255,255,0.12)', transform: 'translateY(-1px)' };
+  const el = href ? 'a' : 'button';
+  return React.createElement(el, {
+    href, onClick,
+    style: hov ? { ...styles, ...hovStyle } : styles,
+    onMouseEnter: () => setHov(true),
+    onMouseLeave: () => setHov(false),
+  }, children);
+};
+
+// ── Floating Badge ────────────────────────────────────────
+const FloatBadge = ({ children, style }) => (
+  <div style={{
+    position: 'absolute', background: '#1A1A1A',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 14, padding: '10px 16px',
+    backdropFilter: 'blur(16px)',
+    fontSize: 12, fontWeight: 600, color: '#fff',
+    display: 'flex', alignItems: 'center', gap: 8,
+    boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+    animation: 'float 4s ease-in-out infinite',
+    whiteSpace: 'nowrap',
+    ...style,
+  }}>{children}</div>
+);
+
+// ── Phone Mockup ──────────────────────────────────────────
+const PhoneMockup = () => (
+  <div style={{ position: 'relative', display: 'inline-block' }}>
+    {/* Phone frame */}
+    <div style={{
+      width: 220, height: 440,
+      background: '#111', borderRadius: 36,
+      border: '2px solid rgba(255,255,255,0.15)',
+      overflow: 'hidden', position: 'relative',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)',
+    }}>
+      {/* Notch */}
+      <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:80, height:24, background:'#0A0A0A', borderRadius:'0 0 16px 16px', zIndex:10 }} />
+      {/* Screen content - vertical video mockup */}
+      <div style={{ width:'100%', height:'100%', background:'linear-gradient(180deg, #111 0%, #0A0A0A 100%)', display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:12 }}>
+        {/* Video frame placeholder */}
+        <div style={{ position:'absolute', inset:0, background:'#0D0D0D', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          {/* Striped placeholder */}
+          <div style={{ width:'100%', height:'100%', backgroundImage:'repeating-linear-gradient(45deg, #151515 0px, #151515 4px, #111 4px, #111 12px)', opacity:0.5 }} />
+          <div style={{ position:'absolute', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+            <div style={{ width:40, height:40, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:0, height:0, borderTop:'8px solid transparent', borderBottom:'8px solid transparent', borderLeft:'14px solid rgba(255,255,255,0.7)', marginLeft:3 }} />
+            </div>
+            <span style={{ color:'rgba(255,255,255,0.3)', fontSize:10, fontFamily:'monospace' }}>VIDEO 9:16</span>
+          </div>
+        </div>
+        {/* TikTok-like UI overlay */}
+        <div style={{ position:'relative', zIndex:5, display:'flex', flexDirection:'column', gap:4 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,0.1)', border:'1.5px solid rgba(255,255,255,0.3)' }} />
+            <span style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.8)' }}>@nayro_agency</span>
+          </div>
+          <div style={{ fontSize:10, color:'rgba(255,255,255,0.5)', lineHeight:1.4 }}>🔥 Votre contenu qui cartonne #restaurant #reels</div>
+          <div style={{ display:'flex', gap:6, marginTop:4 }}>
+            {['❤️', '💬', '↗️'].map(icon => (
+              <div key={icon} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+                <span style={{ fontSize:16 }}>{icon}</span>
+                <span style={{ fontSize:9, color:'rgba(255,255,255,0.5)' }}>12.5K</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Bottom bar */}
+      <div style={{ position:'absolute', bottom:8, left:'50%', transform:'translateX(-50%)', width:60, height:4, background:'rgba(255,255,255,0.3)', borderRadius:2 }} />
+    </div>
+    {/* Floating badges */}
+    <FloatBadge style={{ top: 40, right: -70, animationDelay:'0s' }}>
+      <span style={{ color:'#fff' }}>🎬</span> 500+ vidéos
+    </FloatBadge>
+    <FloatBadge style={{ bottom: 120, left: -80, animationDelay:'1.2s' }}>
+      <span>📐</span> Format 9:16
+    </FloatBadge>
+    <FloatBadge style={{ bottom: 60, right: -65, animationDelay:'0.6s' }}>
+      <span>🎥</span> 50+ tournages
+    </FloatBadge>
+  </div>
+);
+
+// ── Services Card ─────────────────────────────────────────
+const ServiceCard = ({ icon, title, desc, badge, wide, highlight }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: highlight ? '#fff' : (hov ? '#1E1E1E' : '#161616'),
+        border: `1px solid ${highlight ? 'transparent' : (hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)')}`,
+        borderRadius: 24,
+        padding: wide ? '40px 48px' : '32px',
+        gridColumn: wide ? '1 / -1' : 'auto',
+        color: highlight ? '#000' : '#fff',
+        transition: 'all 0.3s ease',
+        transform: hov ? 'translateY(-4px)' : 'none',
+        boxShadow: hov ? '0 20px 60px rgba(0,0,0,0.5)' : 'none',
+        cursor: 'default',
+      }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+        <span style={{ fontSize: wide ? 28 : 24 }}>{icon}</span>
+        {badge && <span style={{
+          padding: '5px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+          background: highlight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+          border: `1px solid ${highlight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.15)'}`,
+          color: highlight ? '#000' : '#fff',
+        }}>{badge}</span>}
+      </div>
+      <h3 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize: wide ? 28 : 20, lineHeight:1.1, marginBottom:12 }}>{title}</h3>
+      <p style={{ fontSize:14, lineHeight:1.7, opacity: highlight ? 0.65 : 0.55, maxWidth: wide ? 640 : 'none' }}>{desc}</p>
+      {wide && (
+        <div style={{ marginTop:24, display:'flex', gap:12, flexWrap:'wrap' }}>
+          <span style={{ padding:'6px 20px', borderRadius:999, fontSize:12, fontWeight:600, background:'rgba(0,0,0,0.08)', border:'1px solid rgba(0,0,0,0.12)' }}>8 à 20 vidéos par mois</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Process Step ──────────────────────────────────────────
+const ProcessStep = ({ num, title, desc, delay }) => (
+  <div className={`reveal reveal-delay-${delay}`} style={{ display:'flex', gap:24, alignItems:'flex-start' }}>
+    <div style={{ flexShrink:0, width:48, height:48, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Archivo, sans-serif', fontWeight:900, fontSize:14 }}>{num}</div>
+    <div>
+      <h4 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:18, marginBottom:8 }}>{title}</h4>
+      <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', lineHeight:1.7 }}>{desc}</p>
+    </div>
+  </div>
+);
+
+// ── Testimonial ───────────────────────────────────────────
+const Testimonial = ({ name, role, quote, emoji }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? '#1E1E1E' : '#161616',
+        border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:32,
+        transition:'all 0.3s ease',
+        transform: hov ? 'translateY(-4px)' : 'none',
+        boxShadow: hov ? '0 20px 50px rgba(0,0,0,0.5)' : 'none',
+      }}>
+      <div style={{ fontSize:28, marginBottom:16 }}>{emoji}</div>
+      <p style={{ fontSize:15, lineHeight:1.75, color:'rgba(255,255,255,0.75)', marginBottom:24, fontStyle:'italic' }}>"{quote}"</p>
+      <div>
+        <div style={{ fontWeight:700, fontSize:14 }}>{name}</div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{role}</div>
+      </div>
+    </div>
+  );
+};
+
+// ── Pricing Card ──────────────────────────────────────────
+const PricingCard = ({ plan, price, period, features, highlight, badge }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        background: highlight ? '#fff' : (hov ? '#1E1E1E' : '#161616'),
+        border:`1px solid ${highlight ? 'transparent' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius:28, padding:'40px 36px',
+        color: highlight ? '#000' : '#fff',
+        transition:'all 0.3s ease',
+        transform: hov ? 'translateY(-6px)' : 'none',
+        boxShadow: highlight ? '0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px rgba(255,255,255,0.05)' : (hov ? '0 20px 60px rgba(0,0,0,0.5)' : 'none'),
+        position:'relative', overflow:'hidden',
+      }}>
+      {badge && <div style={{ position:'absolute', top:24, right:24, padding:'4px 12px', borderRadius:999, background: highlight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase' }}>{badge}</div>}
+      <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', opacity:0.5, marginBottom:16 }}>{plan}</div>
+      <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontSize:56, lineHeight:1, marginBottom:6 }}>{price}</div>
+      <div style={{ fontSize:13, opacity:0.5, marginBottom:32 }}>{period}</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:36 }}>
+        {features.map((f, i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:10, fontSize:14, opacity:0.8 }}>
+            <div style={{ width:16, height:16, borderRadius:'50%', border:`1.5px solid ${highlight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)'}`, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:5, height:5, background: highlight ? '#000' : '#fff', borderRadius:'50%' }} />
+            </div>
+            {f}
+          </div>
+        ))}
+      </div>
+      <Btn primary={!highlight} outline={highlight}>{highlight ? 'Commencer maintenant' : 'Choisir ce pack'}</Btn>
+    </div>
+  );
+};
+
+// ── Video Card ────────────────────────────────────────────
+const VideoCard = ({ src }) => {
+  const videoRef = useRef(null);
+  const [hov, setHov] = useState(false);
+
+  useEffect(() => {
+    if (videoRef.current && src) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [src]);
+
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        aspectRatio:'9/16', borderRadius:16, overflow:'hidden',
+        background:'#111', border:'1px solid rgba(255,255,255,0.07)',
+        position:'relative', cursor:'pointer',
+        transform: hov ? 'scale(1.03)' : 'scale(1)',
+        transition:'transform 0.35s ease, box-shadow 0.35s ease',
+        boxShadow: hov ? '0 24px 60px rgba(0,0,0,0.7)' : '0 4px 20px rgba(0,0,0,0.4)',
+      }}>
+      {!src && <>
+        <div style={{ position:'absolute', inset:0, backgroundImage:'repeating-linear-gradient(45deg, #151515 0px, #151515 3px, #0F0F0F 3px, #0F0F0F 10px)' }} />
+        <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12 }}>
+          <div style={{ width:48, height:48, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ width:0, height:0, borderTop:'9px solid transparent', borderBottom:'9px solid transparent', borderLeft:'15px solid rgba(255,255,255,0.6)', marginLeft:3 }} />
+          </div>
+          <span style={{ fontSize:10, fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)', fontFamily:'monospace' }}>9:16</span>
+        </div>
+      </>}
+      {src && <video ref={videoRef} autoPlay loop muted playsInline src={src}
+        style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }}
+      />}
+    </div>
+  );
+};
+
+// ── Main App ──────────────────────────────────────────────
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweakOpen, setTweakOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useReveal();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode') setTweakOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweakOpen(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  const setTweak = (key, val) => {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+  };
+
+  const clients = ['Le Petit Bistro', 'Fusion 360', 'Brasserie Nord', 'Casa Roma', 'Le Comptoir', 'Sushi Palace', 'La Table Verte', 'Urban Grill', 'Pâtisserie Blanc', 'Maison Dorée'];
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#0A0A0A' }}>
+
+      {/* ── BANNER ───────────────────────────────────────── */}
+      {tweaks.bannerVisible && (
+        <div style={{ background:'#fff', color:'#000', padding:'9px 24px', display:'flex', alignItems:'center', justifyContent:'center', gap:16, fontSize:13, fontWeight:500, flexWrap:'wrap' }}>
+          <span>🎁 <strong>Offre spéciale</strong> — Premier mois offert sur l'accompagnement restaurateur</span>
+          <button onClick={() => {}} style={{ padding:'5px 16px', borderRadius:999, background:'#000', color:'#fff', border:'none', fontSize:12, fontWeight:700, cursor:'pointer', letterSpacing:'0.04em' }}>J'en profite →</button>
+        </div>
+      )}
+
+      {/* ── NAV ──────────────────────────────────────────── */}
+      <nav style={{
+        position:'sticky', top:0, zIndex:100,
+        background: scrolled ? 'rgba(10,10,10,0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        transition:'all 0.4s ease',
+        padding:'0 40px', height:68,
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+      }}>
+        <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:20, letterSpacing:'-0.01em' }}>NAYRO AGENCY</div>
+        <div style={{ display:'flex', gap:36, fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.65)' }}>
+          {['Services','Portfolio','Clients','Contact'].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} style={{ textDecoration:'none', color:'inherit', transition:'color 0.2s', letterSpacing:'0.04em' }}
+              onMouseEnter={e => e.target.style.color='#fff'} onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.65)'}>{item}</a>
+          ))}
+        </div>
+        <Btn primary small>{tweaks.ctaText}</Btn>
+      </nav>
+
+      {/* ── HERO ─────────────────────────────────────────── */}
+      <section data-screen-label="01 Hero" style={{ minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 100px', maxWidth:1280, margin:'0 auto', gap:80 }}>
+        {/* Left */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', gap:28 }}>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', animation:'fadeUp 0.6s ease both' }}>
+            <Tag>⭐⭐⭐⭐⭐ Agence Community Management</Tag>
+          </div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap', animation:'fadeUp 0.6s ease 0.1s both' }}>
+            {['Instagram','TikTok','Snapchat','Facebook'].map(s => (
+              <span key={s} style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid rgba(255,255,255,0.25)', fontSize:12, fontWeight:600, letterSpacing:'0.06em', background:'rgba(255,255,255,0.04)' }}>{s}</span>
+            ))}
+          </div>
+          <h1 style={{
+            fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic',
+            textTransform:'uppercase', fontSize:'clamp(42px, 5.5vw, 76px)',
+            lineHeight:1.0, letterSpacing:'-0.02em',
+            animation:'fadeUp 0.7s ease 0.15s both',
+          }}>
+            FAITES EXPLOSER VOTRE MARQUE SUR LES RÉSEAUX.
+          </h1>
+          <p style={{ fontSize:17, lineHeight:1.75, color:'rgba(255,255,255,0.6)', maxWidth:520, animation:'fadeUp 0.7s ease 0.25s both' }}>
+            Nayro Agency, votre partenaire Community Management. Contenu vidéo vertical, stratégie social media et accompagnement sur-mesure pour faire décoller votre activité.
+          </p>
+          <div style={{ display:'flex', gap:14, flexWrap:'wrap', animation:'fadeUp 0.7s ease 0.35s both' }}>
+            <Btn primary href="#services">Voir nos offres</Btn>
+            <Btn outline href="#contact">📞 Me contacter</Btn>
+          </div>
+        </div>
+        {/* Right */}
+        <div style={{ flexShrink:0, position:'relative', animation:'fadeIn 1s ease 0.4s both', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <PhoneMockup />
+        </div>
+      </section>
+
+      {/* ── STATS ────────────────────────────────────────── */}
+      <section data-screen-label="02 Stats" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'#111' }}>
+        <div style={{ maxWidth:1280, margin:'0 auto', padding:'60px 40px', display:'flex', gap:0 }}>
+          {[['30M+','VUES GÉNÉRÉES'],['5+','CLIENTS PREMIUM'],['250+','VIDÉOS PRODUITES']].map(([num, label], i) => (
+            <div key={i} className="reveal" style={{
+              flex:1, textAlign:'center', padding:'20px',
+              borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            }}>
+              <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:'clamp(40px,5vw,64px)', letterSpacing:'-0.02em', lineHeight:1 }}>{num}</div>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginTop:8 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+        {/* Client carousel */}
+        <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'28px 0', overflow:'hidden', background:'#0D0D0D' }}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.3)', textAlign:'center', marginBottom:20 }}>ILS NOUS FONT CONFIANCE</div>
+          <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:80 }}>
+            {['PIZZALIF','O\'GRAM','LE FRENCHY'].map((c, i) => (
+              <span key={i} style={{ fontSize:18, fontWeight:700, fontFamily:'Archivo, sans-serif', color:'rgba(255,255,255,0.35)', letterSpacing:'0.14em', textTransform:'uppercase' }}>{c}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SERVICES ─────────────────────────────────────── */}
+      <section id="services" data-screen-label="03 Services" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+        <div className="reveal" style={{ marginBottom:64 }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Nos expertises</div>
+          <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,4.5vw,60px)', lineHeight:1.0, maxWidth:780, letterSpacing:'-0.02em' }}>
+            NOS SERVICES POUR FAIRE EXPLOSER VOTRE MARQUE
+          </h2>
+        </div>
+        <div className="reveal reveal-delay-1" style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16 }}>
+          <ServiceCard wide highlight icon="🎬" badge="★ Service phare" title="Création de contenu court — TikTok, Reels, Shorts" desc="De 8 à 15 vidéos courtes par mois selon le pack choisi. Tournage, montage, publication et optimisation des hashtags inclus. Votre présence digitale, notre priorité." />
+          <ServiceCard icon="🎬" badge="Prime" title="Production audiovisuelle" desc="Tournages professionnels, clips, interviews et reportages. Matériel haut de gamme, réalisation créative." />
+          <ServiceCard icon="🎨" badge="Identité visuelle" title="Graphisme & Direction artistique" desc="Logos, chartes graphiques, templates réseaux et supports print. Une identité cohérente et mémorable." />
+          <ServiceCard icon="🌐" badge="Numérique" title="Création de site web" desc="Sites vitrines, landing pages et e-commerce. Design premium, SEO optimisé, livré en 2 semaines." />
+        </div>
+      </section>
+
+      {/* ── PROCESS ──────────────────────────────────────── */}
+      <section data-screen-label="04 Process" style={{ background:'#111', borderTop:'1px solid rgba(255,255,255,0.06)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:80, alignItems:'center' }}>
+          <div>
+            <div className="reveal" style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Notre processus</div>
+            <h2 className="reveal" style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(32px,4vw,54px)', lineHeight:1.0, marginBottom:48, letterSpacing:'-0.02em' }}>
+              DE LA STRATÉGIE À LA PUBLICATION
+            </h2>
+            <div style={{ display:'flex', flexDirection:'column', gap:36 }}>
+              <ProcessStep delay={1} num="01" title="Audit & stratégie" desc="Analyse de votre marque, vos concurrents et votre audience cible. Définition des objectifs et du calendrier éditorial." />
+              <ProcessStep delay={2} num="02" title="Création de contenu" desc="Tournage, montage, design graphique. Chaque vidéo est optimisée pour maximiser l'engagement et les vues." />
+              <ProcessStep delay={3} num="03" title="Publication & pilotage" desc="Nous gérons vos comptes, publions aux meilleures heures et interagissons avec votre communauté." />
+              <ProcessStep delay={4} num="04" title="Analyse & optimisation" desc="Reporting mensuel détaillé, ajustement de la stratégie selon les performances réelles." />
+            </div>
+          </div>
+          {/* Visual right side */}
+          <div className="reveal reveal-delay-2" style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'center', minHeight:400 }}>
+            <div style={{ width:280, height:280, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+              <div style={{ width:180, height:180, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ width:80, height:80, borderRadius:'50%', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:13, color:'#000' }}>N</span>
+                </div>
+              </div>
+              {/* Orbit dots */}
+              {[0,90,180,270].map((deg, i) => (
+                <div key={i} style={{ position:'absolute', width:'100%', height:'100%', transform:`rotate(${deg}deg)` }}>
+                  <div style={{ position:'absolute', top:-6, left:'50%', marginLeft:-6, width:12, height:12, borderRadius:'50%', background:'rgba(255,255,255,0.3)', border:'1px solid rgba(255,255,255,0.5)' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* ── PORTFOLIO ────────────────────────────────────── */}
+      <section id="portfolio" data-screen-label="05 Portfolio" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+        {/* Header */}
+        <div className="reveal" style={{ marginBottom:80 }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Réalisations</div>
+          <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,4.5vw,60px)', lineHeight:1.0, letterSpacing:'-0.02em', marginBottom:20 }}>NOTRE TRAVAIL EN ACTION</h2>
+          <p style={{ fontSize:17, color:'rgba(255,255,255,0.5)', maxWidth:580, lineHeight:1.75 }}>Des vidéos qui performent, des marques qui explosent. Voici ce qu'on a fait pour nos clients.</p>
+        </div>
+
+        {/* Client sub-sections */}
+        {[
+          { key:'pizzalif', img:'assets/pizzalif.jpg', name:'PIZZALIF',   sub:'20M+ vues · 45K abonnés gagnés en 1 mois', videos:['assets/pizzalif-01.mp4','assets/pizzalif-02.mp4','assets/pizzalif-03.mp4'] },
+          { key:'ogram',    img:'assets/ogram.png',    name:"O'GRAM",     sub:'Nouveaux clients en restaurant grâce aux réseaux sociaux', videos:['assets/ogram-01.mp4','assets/ogram-02.mp4','assets/ogram-03.mp4'] },
+          { key:'frenchy',  img:'assets/frenchy.png',  name:'LE FRENCHY', sub:'+20% de chiffre d\'affaires depuis notre collaboration', videos:['assets/lefrenchy-01.mp4','assets/lefrenchy-02.mp4','assets/lefrenchy-03.mp4'] },
+        ].map(({ key, img, name, sub, videos }, si) => (
+          <div key={key} className="reveal" style={{ marginBottom: si < 2 ? 80 : 0 }}>
+            {/* Sub-section header */}
+            <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:32, paddingBottom:24, borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ width:52, height:52, borderRadius:'50%', overflow:'hidden', border:'1.5px solid rgba(255,255,255,0.15)', flexShrink:0, boxShadow:'0 4px 16px rgba(0,0,0,0.5)' }}>
+                <img src={img} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              </div>
+              <div>
+                <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:22, letterSpacing:'-0.01em', lineHeight:1 }}>{name}</div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', marginTop:5, letterSpacing:'0.02em' }}>{sub}</div>
+              </div>
+            </div>
+            {/* Video grid */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+              {[0,1,2].map(vi => <VideoCard key={vi} src={videos[vi]} />)}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ── TARIFS SUR-MESURE ────────────────────────────── */}
+      <section data-screen-label="05 Tarifs" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+        <div className="reveal" style={{ textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:28 }}>
+          <Tag>Devis personnalisé</Tag>
+          <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(40px,5.5vw,80px)', lineHeight:1.0, letterSpacing:'-0.02em', maxWidth:800 }}>
+            CHAQUE PROJET EST UNIQUE
+          </h2>
+          <p style={{ fontSize:17, lineHeight:1.8, color:'rgba(255,255,255,0.55)', maxWidth:580 }}>
+            Nous ne vendons pas de packs standardisés. On discute de vos objectifs, on analyse votre marché, et on construit une offre sur-mesure qui colle à <em>votre</em> activité.
+          </p>
+          <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginTop:12 }}>
+            <Btn primary>📞 07 66 27 98 30</Btn>
+            <Btn outline>✉️ nayroagency@gmail.com</Btn>
+          </div>
+          <p style={{ fontSize:12, color:'rgba(255,255,255,0.25)', letterSpacing:'0.06em', marginTop:4 }}>
+            Réponse sous 24h · Premier échange gratuit · Sans engagement
+          </p>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ─────────────────────────────────── */}
+      <section id="clients" data-screen-label="06 Témoignages" style={{ background:'#111', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+          <div className="reveal" style={{ marginBottom:64 }}>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Témoignages</div>
+            <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,4.5vw,60px)', lineHeight:1.0, letterSpacing:'-0.02em' }}>
+              ILS NOUS FONT CONFIANCE
+            </h2>
+          </div>
+          <div className="reveal reveal-delay-1" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+            {[
+              { logo:'PIZZALIF', img:'assets/pizzalif.jpg', name:'Pizzalif', role:'Restaurant — Client Nayro', quote:'En seulement 1 mois avec Nayro Agency, on a généré plus de 20 millions de vues et gagné plus de 45 000 abonnés. Résultats immédiats et concrets.' },
+              { logo:"O'GRAM",   img:'assets/ogram.png',    name:"O'Gram",   role:'Restaurant — Client Nayro', quote:"Depuis qu'on bosse avec Nayro, on voit arriver plein de nouveaux visages au restaurant. Les réseaux sociaux ramènent une vraie clientèle." },
+              { logo:'FRENCHY',  img:'assets/frenchy.png',  name:'Le Frenchy', role:'Restaurant — Client Nayro', quote:"Notre chiffre d'affaires a bougé de +20% depuis le début de la collaboration avec Nayro Agency. Un vrai impact business, pas juste des likes." },
+            ].map(({ logo, img, name, role, quote }, i) => {
+              const [hov, setHov] = React.useState(false);
+              return (
+                <div key={i} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+                  style={{ background: hov ? '#1E1E1E' : '#161616', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:32, transition:'all 0.3s ease', transform: hov ? 'translateY(-4px)' : 'none', boxShadow: hov ? '0 20px 50px rgba(0,0,0,0.5)' : 'none', display:'flex', flexDirection:'column', gap:20 }}>
+                  {/* Logo */}
+                  <div style={{ width:60, height:60, borderRadius:14, overflow:'hidden', border:'1px solid rgba(255,255,255,0.15)', flexShrink:0, boxShadow:'0 4px 16px rgba(0,0,0,0.4)' }}>
+                    <img src={img} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  </div>
+                  <p style={{ fontSize:15, lineHeight:1.75, color:'rgba(255,255,255,0.75)', fontStyle:'italic', flex:1 }}>"{quote}"</p>
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14 }}>{name}</div>
+                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{role}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA FINAL ────────────────────────────────────── */}
+      <section id="contact" data-screen-label="07 Contact CTA" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+        <div className="reveal" style={{
+          background:'#fff', borderRadius:32, padding:'80px 80px',
+          textAlign:'center', color:'#000',
+        }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)', marginBottom:20 }}>PRÊT À DÉCOLLER ?</div>
+          <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,5vw,72px)', lineHeight:1.0, letterSpacing:'-0.02em', marginBottom:24 }}>
+            LANCEZ VOTRE PROJET AVEC NOUS
+          </h2>
+          <p style={{ fontSize:17, color:'rgba(0,0,0,0.55)', maxWidth:520, margin:'0 auto 40px', lineHeight:1.75 }}>
+            Audit gratuit de votre présence digitale. Réponse sous 24h. Aucun engagement.
+          </p>
+          <div style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap' }}>
+            <button style={{ padding:'16px 36px', borderRadius:999, background:'#000', color:'#fff', border:'none', fontFamily:'Inter,sans-serif', fontWeight:700, fontSize:15, cursor:'pointer', letterSpacing:'0.02em' }}>📞 07 66 27 98 30</button>
+            <button style={{ padding:'16px 36px', borderRadius:999, background:'transparent', color:'#000', border:'1.5px solid rgba(0,0,0,0.25)', fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:15, cursor:'pointer' }}>✉ nayroagency@gmail.com</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ───────────────────────────────────────── */}
+      <footer style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'48px 40px' }}>
+        <div style={{ maxWidth:1280, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:24 }}>
+          <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:18 }}>NAYRO AGENCY</div>
+          <div style={{ display:'flex', gap:32, fontSize:13, color:'rgba(255,255,255,0.35)' }}>
+            {['Instagram','TikTok','LinkedIn','nayroagency@gmail.com'].map(item => (
+              <span key={item} style={{ cursor:'pointer' }}>{item}</span>
+            ))}
+          </div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.2)' }}>© 2026 Nayro Agency. Tous droits réservés.</div>
+        </div>
+      </footer>
+
+      {/* ── TWEAKS PANEL ─────────────────────────────────── */}
+      {tweakOpen && (
+        <div style={{
+          position:'fixed', bottom:24, right:24, zIndex:10000,
+          background:'#1A1A1A', border:'1px solid rgba(255,255,255,0.12)',
+          borderRadius:20, padding:28, width:300,
+          boxShadow:'0 32px 80px rgba(0,0,0,0.8)',
+          backdropFilter:'blur(20px)',
+        }}>
+          <div style={{ fontFamily:'Archivo,sans-serif', fontWeight:900, fontStyle:'italic', fontSize:16, marginBottom:24, letterSpacing:'0.04em' }}>TWEAKS</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            {/* Banner toggle */}
+            <div>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.4)', marginBottom:10 }}>Bandeau promo</div>
+              <div style={{ display:'flex', gap:8 }}>
+                {[['Visible', true],['Masqué', false]].map(([label, val]) => (
+                  <button key={label} onClick={() => setTweak('bannerVisible', val)} style={{
+                    flex:1, padding:'8px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)',
+                    background: tweaks.bannerVisible === val ? '#fff' : 'transparent',
+                    color: tweaks.bannerVisible === val ? '#000' : 'rgba(255,255,255,0.5)',
+                    fontSize:12, fontWeight:600, cursor:'pointer',
+                  }}>{label}</button>
+                ))}
+              </div>
+            </div>
+            {/* CTA Text */}
+            <div>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.4)', marginBottom:10 }}>Texte CTA nav</div>
+              <input value={tweaks.ctaText} onChange={e => setTweak('ctaText', e.target.value)} style={{
+                width:'100%', padding:'9px 14px', borderRadius:10,
+                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)',
+                color:'#fff', fontFamily:'Inter,sans-serif', fontSize:13,
+              }} />
+            </div>
+            {/* Stats style */}
+            <div>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.4)', marginBottom:10 }}>Style stats</div>
+              <div style={{ display:'flex', gap:8 }}>
+                {[['Grand','large'],['Compact','small']].map(([label, val]) => (
+                  <button key={label} onClick={() => setTweak('statsStyle', val)} style={{
+                    flex:1, padding:'8px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)',
+                    background: tweaks.statsStyle === val ? '#fff' : 'transparent',
+                    color: tweaks.statsStyle === val ? '#000' : 'rgba(255,255,255,0.5)',
+                    fontSize:12, fontWeight:600, cursor:'pointer',
+                  }}>{label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
