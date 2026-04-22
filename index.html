@@ -22,7 +22,61 @@
     --muted: rgba(255,255,255,0.45);
     --muted2: rgba(255,255,255,0.65);
   }
+  @keyframes heavyDrop {
+    0%   { opacity: 0; transform: scale(1.8) translateY(-20px); }
+    70%  { opacity: 1; transform: scale(0.9) translateY(3px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .star-anim {
+    display: inline-block;
+    opacity: 0;
+    animation: heavyDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ── ROCKET ─────────────────────────────────────────── */
+  @keyframes rocketBounce {
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-4px); }
+  }
+  .rocket-icon {
+    display: inline-block;
+    animation: rocketBounce 1.2s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes levitate {
+    0%   { transform: translateY(0px); }
+    50%  { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+  }
+  @keyframes levitate-shadow {
+    0%   { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1.5px rgba(255,255,255,0.15); }
+    50%  { box-shadow: 0 12px 24px rgba(0,0,0,0.6), 0 0 0 1.5px rgba(255,255,255,0.15); }
+    100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1.5px rgba(255,255,255,0.15); }
+  }
+
   html { scroll-behavior: smooth; }
+
+  /* ── CURSOR GLOW ───────────────────────────────────── */
+  #cursor-glow {
+    position: fixed;
+    top: 0; left: 0;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255,255,255,0.50) 0%,
+      rgba(255,255,255,0.10) 30%,
+      transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: screen;
+    filter: blur(40px);
+    will-change: transform;
+  }
+  @media (max-width: 768px), (pointer: coarse) {
+    #cursor-glow { display: none !important; }
+  }
   body {
     background: var(--bg);
     color: var(--text);
@@ -77,6 +131,118 @@
   .reveal-delay-3 { transition-delay: 0.3s; }
   .reveal-delay-4 { transition-delay: 0.4s; }
 
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  img, video { max-width: 100%; }
+
+  /* Nav */
+  .nav-links { display: flex; gap: 36px; }
+  .nav-cta   { display: flex; }
+  .nav-burger { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: #fff; }
+
+  /* Hero */
+  .hero-section { flex-direction: row; }
+  .hero-phone   { display: flex; }
+
+  /* Stats */
+  .stats-row { display: flex; flex-direction: row; }
+  .stat-item { border-right-width: 1px; }
+
+  /* Grids */
+  .grid-3  { grid-template-columns: repeat(3,1fr); }
+  .grid-2  { grid-template-columns: 1fr 1fr; }
+
+  /* Process */
+  .process-grid { grid-template-columns: 1fr 1fr; }
+  .process-visual { display: flex; }
+
+  /* Client names */
+  .client-names { gap: 80px; }
+
+  /* CTA box */
+  .cta-box { padding: 80px 80px; }
+  .cta-btns { flex-direction: row; }
+
+  /* Footer */
+  .footer-inner { flex-direction: row; }
+
+  /* ── TABLET (≤ 768px) */
+  @media (max-width: 768px) {
+    .nav-links  { display: none; }
+    .nav-cta    { display: none; }
+    .nav-burger { display: flex; align-items: center; justify-content: center; }
+
+    .hero-section { flex-direction: column; padding: 60px 20px 80px; gap: 48px; min-height: auto; }
+    .hero-phone   { display: none; }
+
+    .stats-row  { flex-direction: column; }
+    .stat-item  { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .stat-item:last-child { border-bottom: none; }
+
+    .grid-3    { grid-template-columns: 1fr; }
+    .grid-2    { grid-template-columns: 1fr; }
+
+    .process-grid   { grid-template-columns: 1fr; gap: 40px; }
+    .process-visual { display: none; }
+
+    .client-names { gap: 32px; flex-wrap: wrap; justify-content: center; }
+
+    .section-pad { padding: 80px 20px; }
+
+    .cta-box  { padding: 48px 24px; }
+    .cta-btns { flex-direction: column; align-items: stretch; }
+    .cta-btns button, .cta-btns a { width: 100%; justify-content: center; }
+
+    .footer-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .footer-links { flex-wrap: wrap; gap: 16px; }
+  }
+
+  /* ── MOBILE (≤ 480px) */
+  @media (max-width: 480px) {
+    .hero-section { padding: 48px 16px 64px; }
+    .section-pad  { padding: 64px 16px; }
+    .cta-box      { padding: 40px 20px; border-radius: 20px; }
+    .client-names { gap: 24px; }
+    nav           { padding: 0 20px !important; }
+  }
+
+  /* Mobile menu overlay */
+  .mobile-menu {
+    display: none;
+    position: fixed; inset: 0; top: 68px; z-index: 99;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 36px;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: 'Archivo', sans-serif; font-weight: 900; font-style: italic;
+    font-size: 32px; text-transform: uppercase; text-decoration: none; color: #fff;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── CURSOR GLOW ─────────────────────────────────────── */
+  #cursor-glow {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 320px; height: 320px;
+    margin: -160px 0 0 -160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 70%);
+    filter: blur(40px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: 1;
+    transition: transform 0.12s ease-out;
+    will-change: transform;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    #cursor-glow { display: block; }
+  }
+
   /* Noise texture overlay */
   body::before {
     content: '';
@@ -90,7 +256,32 @@
 </style>
 </head>
 <body>
+<div id="cursor-glow"></div>
+<div id="cursor-glow"></div>
 <div id="root"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var glow = document.getElementById('cursor-glow');
+  if (!glow) return;
+  document.addEventListener('mousemove', function(e) {
+    glow.style.transform = 'translate(' + e.clientX + 'px, ' + e.clientY + 'px) translate(-50%, -50%)';
+  });
+});
+</script>
+<script>
+  (function() {
+    const glow = document.getElementById('cursor-glow');
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    window.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+    function animate() {
+      cx += (tx - cx) * 0.1;
+      cy += (ty - cy) * 0.1;
+      glow.style.transform = `translate(${cx}px, ${cy}px)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+</script>
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
@@ -375,6 +566,47 @@ const VideoCard = ({ src }) => {
   );
 };
 
+// ── Phone Modal ───────────────────────────────────────────
+const PhoneModal = ({ open, onClose, dark }) => {
+  if (!open) return null;
+  const bg   = dark ? '#1A1A1A' : '#fff';
+  const text = dark ? '#fff'    : '#000';
+  const sub  = dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+  const btn  = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const bdr  = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)';
+  return (
+    <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:9998, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:bg, borderRadius:24, padding:'36px 32px', maxWidth:320, width:'100%', boxShadow:'0 40px 80px rgba(0,0,0,0.5)', border:`1px solid ${bdr}` }}>
+        <div style={{ fontFamily:'Archivo,sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:18, color:text, marginBottom:6 }}>Nous contacter</div>
+        <div style={{ fontSize:13, color:sub, marginBottom:28 }}>07 66 27 98 30</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <a href="tel:+33766279830" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'14px 20px', borderRadius:999, background:text, color:bg, fontFamily:'Inter,sans-serif', fontWeight:700, fontSize:15, textDecoration:'none', transition:'opacity 0.2s' }} onMouseEnter={e=>e.currentTarget.style.opacity='0.85'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+            📞 Appeler
+          </a>
+          <a href="sms:+33766279830" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'14px 20px', borderRadius:999, background:btn, color:text, border:`1.5px solid ${bdr}`, fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:15, textDecoration:'none', transition:'opacity 0.2s' }} onMouseEnter={e=>e.currentTarget.style.opacity='0.75'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+            💬 Envoyer un SMS
+          </a>
+          <button onClick={onClose} style={{ padding:'12px', borderRadius:999, background:'transparent', color:sub, border:'none', fontFamily:'Inter,sans-serif', fontWeight:500, fontSize:13, cursor:'pointer' }}>Annuler</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Phone Btn ─────────────────────────────────────────────
+const PhoneBtn = ({ dark, style: extraStyle, btnStyle }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <PhoneModal open={open} onClose={() => setOpen(false)} dark={dark} />
+      {btnStyle === 'outline'
+        ? <button onClick={() => setOpen(true)} style={{ padding:'16px 36px', borderRadius:999, background:'transparent', color:'#000', border:'1.5px solid rgba(0,0,0,0.25)', fontFamily:'Inter,sans-serif', fontWeight:700, fontSize:15, cursor:'pointer', letterSpacing:'0.02em', ...extraStyle }}>📞 07 66 27 98 30</button>
+        : <Btn primary onClick={() => setOpen(true)}>📞 07 66 27 98 30</Btn>
+      }
+    </>
+  );
+};
+
 // ── Main App ──────────────────────────────────────────────
 function App() {
   const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
@@ -427,27 +659,81 @@ function App() {
         padding:'0 40px', height:68,
         display:'flex', alignItems:'center', justifyContent:'space-between',
       }}>
-        <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:20, letterSpacing:'-0.01em' }}>NAYRO AGENCY</div>
-        <div style={{ display:'flex', gap:36, fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.65)' }}>
+        <div
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:20, letterSpacing:'-0.01em', cursor:'pointer', transition:'opacity 0.2s ease, transform 0.2s ease' }}
+          onMouseEnter={e => { e.currentTarget.style.opacity='0.8'; e.currentTarget.style.transform='scale(1.02)'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='scale(1)'; }}
+        >NAYRO AGENCY</div>
+        <div className="nav-links" style={{ gap:36, fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.65)' }}>
           {['Services','Portfolio','Clients','Contact'].map(item => (
             <a key={item} href={`#${item.toLowerCase()}`} style={{ textDecoration:'none', color:'inherit', transition:'color 0.2s', letterSpacing:'0.04em' }}
               onMouseEnter={e => e.target.style.color='#fff'} onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.65)'}>{item}</a>
           ))}
         </div>
-        <Btn primary small>{tweaks.ctaText}</Btn>
+        <div className="nav-cta"><Btn primary small href="mailto:nayroagency@gmail.com?subject=Demande%20de%20devis%20-%20Nayro%20Agency&body=Bonjour%2C%0A%0AJe%20suis%20int%C3%A9ress%C3%A9(e)%20par%20vos%20services%20de%20Community%20Management.%0A%0AVoici%20quelques%20informations%20sur%20mon%20projet%20%3A%0A-%20Mon%20activit%C3%A9%20%3A%20%0A-%20Mon%20objectif%20principal%20%3A%20%0A-%20Mon%20budget%20estim%C3%A9%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20en%20discuter.%0A%0ACordialement%2C">{tweaks.ctaText}</Btn></div>
+        <button className="nav-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            {menuOpen ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
+          </svg>
+        </button>
       </nav>
 
+      {/* ── MOBILE MENU ───────────────────────────────────── */}
+      <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
+        {['Services','Portfolio','Clients','Contact'].map(item => (
+          <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{item}</a>
+        ))}
+        <Btn primary href="mailto:nayroagency@gmail.com?subject=Demande%20de%20devis%20-%20Nayro%20Agency&body=Bonjour%2C%0A%0AJe%20suis%20int%C3%A9ress%C3%A9(e)%20par%20vos%20services%20de%20Community%20Management.%0A%0AVoici%20quelques%20informations%20sur%20mon%20projet%20%3A%0A-%20Mon%20activit%C3%A9%20%3A%20%0A-%20Mon%20budget%20estim%C3%A9%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20en%20discuter.%0A%0ACordialement%2C" onClick={() => setMenuOpen(false)}>{tweaks.ctaText}</Btn>
+      </div>
+
       {/* ── HERO ─────────────────────────────────────────── */}
-      <section data-screen-label="01 Hero" style={{ minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 100px', maxWidth:1280, margin:'0 auto', gap:80 }}>
+      <section data-screen-label="01 Hero" className="hero-section" style={{ minHeight:'100vh', display:'flex', alignItems:'center', padding:'80px 40px 100px', maxWidth:1280, margin:'0 auto', gap:80 }}>
         {/* Left */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', gap:28 }}>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap', animation:'fadeUp 0.6s ease both' }}>
-            <Tag>⭐⭐⭐⭐⭐ Agence Community Management</Tag>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 14px', borderRadius: 999,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.12em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)',
+              backdropFilter: 'blur(8px)',
+            }}>
+              {['⭐','⭐','⭐','⭐','⭐'].map((s, i) => (
+                <span key={i} className="star-anim" style={{ animationDelay: `${i * 0.4}s` }}>{s}</span>
+              ))}
+              {' '}Agence Community Management
+            </span>
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap', animation:'fadeUp 0.6s ease 0.1s both' }}>
-            {['Instagram','TikTok','Snapchat','Facebook'].map(s => (
-              <span key={s} style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid rgba(255,255,255,0.25)', fontSize:12, fontWeight:600, letterSpacing:'0.06em', background:'rgba(255,255,255,0.04)' }}>{s}</span>
-            ))}
+            {[
+              { name:'Instagram', bg:'linear-gradient(45deg,#F58529 0%,#DD2A7B 40%,#8134AF 60%,#515BD4 100%)', color:'#fff', border:'none', shadow:'rgba(221,42,123,0.35)' },
+              { name:'TikTok',    bg:'#010101', color:'#fff', border:'1.5px solid #FE2C55', shadow:'rgba(254,44,85,0.3)', textShadow:'-1px 0 1px #25F4EE, 1px 0 1px #FE2C55' },
+              { name:'Snapchat',  bg:'linear-gradient(135deg,#FFFC00,#FFE600)', color:'#000', border:'none', shadow:'rgba(255,252,0,0.3)' },
+              { name:'Facebook',  bg:'linear-gradient(135deg,#1877F2,#0C63D4)', color:'#fff', border:'none', shadow:'rgba(24,119,242,0.35)' },
+            ].map(({ name, bg, color, border, shadow, textShadow }) => {
+              const [hov, setHov] = React.useState(false);
+              return (
+                <span key={name}
+                  onMouseEnter={() => setHov(true)}
+                  onMouseLeave={() => setHov(false)}
+                  style={{
+                    padding:'6px 16px', borderRadius:999,
+                    background: bg,
+                    color, border: border || 'none',
+                    fontSize:12, fontWeight:700, letterSpacing:'0.06em',
+                    cursor:'default', userSelect:'none',
+                    boxShadow: `0 4px 20px ${shadow}`,
+                    textShadow: textShadow || 'none',
+                    transform: hov ? 'scale(1.05)' : 'scale(1)',
+                    filter: hov ? 'brightness(1.15)' : 'brightness(1)',
+                    transition:'transform 0.2s ease, filter 0.2s ease',
+                    display:'inline-block',
+                  }}>{name}</span>
+              );
+            })}
           </div>
           <h1 style={{
             fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic',
@@ -461,21 +747,25 @@ function App() {
             Nayro Agency, votre partenaire Community Management. Contenu vidéo vertical, stratégie social media et accompagnement sur-mesure pour faire décoller votre activité.
           </p>
           <div style={{ display:'flex', gap:14, flexWrap:'wrap', animation:'fadeUp 0.7s ease 0.35s both' }}>
-            <Btn primary href="#services">Voir nos offres</Btn>
+            {(() => { const [hov, setHov] = React.useState(false); return (
+              <span className={hov ? 'rocket-hover' : ''} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+              <Btn primary href="#services"><span className="rocket-icon">🚀</span> Voir nos offres</Btn>
+              </span>
+            ); })()}
             <Btn outline href="#contact">📞 Me contacter</Btn>
           </div>
         </div>
         {/* Right */}
-        <div style={{ flexShrink:0, position:'relative', animation:'fadeIn 1s ease 0.4s both', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div className="hero-phone" style={{ flexShrink:0, position:'relative', animation:'fadeIn 1s ease 0.4s both', alignItems:'center', justifyContent:'center' }}>
           <PhoneMockup />
         </div>
       </section>
 
       {/* ── STATS ────────────────────────────────────────── */}
       <section data-screen-label="02 Stats" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'#111' }}>
-        <div style={{ maxWidth:1280, margin:'0 auto', padding:'60px 40px', display:'flex', gap:0 }}>
+        <div className="stats-row" style={{ maxWidth:1280, margin:'0 auto', padding:'60px 40px', gap:0 }}>
           {[['30M+','VUES GÉNÉRÉES'],['5+','CLIENTS PREMIUM'],['250+','VIDÉOS PRODUITES']].map(([num, label], i) => (
-            <div key={i} className="reveal" style={{
+            <div key={i} className="reveal stat-item" style={{
               flex:1, textAlign:'center', padding:'20px',
               borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
             }}>
@@ -487,23 +777,45 @@ function App() {
         {/* Client carousel */}
         <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'28px 0', overflow:'hidden', background:'#0D0D0D' }}>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.3)', textAlign:'center', marginBottom:20 }}>ILS NOUS FONT CONFIANCE</div>
-          <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:80 }}>
-            {['PIZZALIF','O\'GRAM','LE FRENCHY'].map((c, i) => (
-              <span key={i} style={{ fontSize:18, fontWeight:700, fontFamily:'Archivo, sans-serif', color:'rgba(255,255,255,0.35)', letterSpacing:'0.14em', textTransform:'uppercase' }}>{c}</span>
-            ))}
+          <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:80, flexWrap:'wrap' }}>
+            {[
+              { src:'assets/pizzalif.jpg', alt:'Pizzalif',   delay:'0s' },
+              { src:'assets/ogram.png',    alt:"O'Gram",     delay:'0.6s' },
+              { src:'assets/frenchy.png',  alt:'Le Frenchy', delay:'1.2s' },
+            ].map(({ src, alt, delay }) => {
+              const [hov, setHov] = React.useState(false);
+              return (
+                <img key={alt} src={src} alt={alt}
+                  onMouseEnter={() => setHov(true)}
+                  onMouseLeave={() => setHov(false)}
+                  style={{
+                    width:80, height:80, borderRadius:'50%',
+                    objectFit:'cover', objectPosition:'center',
+                    border:'1.5px solid rgba(255,255,255,0.15)',
+                    backgroundColor:'rgba(255,255,255,0.05)',
+                    opacity: hov ? 1 : 0.85,
+                    transform: hov ? 'scale(1.1)' : undefined,
+                    animation: `levitate 3s ease-in-out ${delay} infinite, levitate-shadow 3s ease-in-out ${delay} infinite`,
+                    animationPlayState: hov ? 'paused' : 'running',
+                    transition:'opacity 0.3s ease, transform 0.3s ease',
+                    filter:'none',
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* ── SERVICES ─────────────────────────────────────── */}
-      <section id="services" data-screen-label="03 Services" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+      <section id="services" data-screen-label="03 Services" className="section-pad" style={{ maxWidth:1280, margin:'0 auto' }}>
         <div className="reveal" style={{ marginBottom:64 }}>
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Nos expertises</div>
           <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,4.5vw,60px)', lineHeight:1.0, maxWidth:780, letterSpacing:'-0.02em' }}>
             NOS SERVICES POUR FAIRE EXPLOSER VOTRE MARQUE
           </h2>
         </div>
-        <div className="reveal reveal-delay-1" style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16 }}>
+        <div className="reveal reveal-delay-1 grid-3" style={{ display:'grid', gap:16 }}>
           <ServiceCard wide highlight icon="🎬" badge="★ Service phare" title="Création de contenu court — TikTok, Reels, Shorts" desc="De 8 à 15 vidéos courtes par mois selon le pack choisi. Tournage, montage, publication et optimisation des hashtags inclus. Votre présence digitale, notre priorité." />
           <ServiceCard icon="🎬" badge="Prime" title="Production audiovisuelle" desc="Tournages professionnels, clips, interviews et reportages. Matériel haut de gamme, réalisation créative." />
           <ServiceCard icon="🎨" badge="Identité visuelle" title="Graphisme & Direction artistique" desc="Logos, chartes graphiques, templates réseaux et supports print. Une identité cohérente et mémorable." />
@@ -513,7 +825,7 @@ function App() {
 
       {/* ── PROCESS ──────────────────────────────────────── */}
       <section data-screen-label="04 Process" style={{ background:'#111', borderTop:'1px solid rgba(255,255,255,0.06)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:80, alignItems:'center' }}>
+        <div className="process-grid section-pad" style={{ maxWidth:1280, margin:'0 auto', display:'grid', gap:80, alignItems:'center' }}>
           <div>
             <div className="reveal" style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Notre processus</div>
             <h2 className="reveal" style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(32px,4vw,54px)', lineHeight:1.0, marginBottom:48, letterSpacing:'-0.02em' }}>
@@ -527,7 +839,7 @@ function App() {
             </div>
           </div>
           {/* Visual right side */}
-          <div className="reveal reveal-delay-2" style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'center', minHeight:400 }}>
+          <div className="reveal reveal-delay-2 process-visual" style={{ position:'relative', alignItems:'center', justifyContent:'center', minHeight:400 }}>
             <div style={{ width:280, height:280, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
               <div style={{ width:180, height:180, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <div style={{ width:80, height:80, borderRadius:'50%', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -548,7 +860,7 @@ function App() {
 
 
       {/* ── PORTFOLIO ────────────────────────────────────── */}
-      <section id="portfolio" data-screen-label="05 Portfolio" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+      <section id="portfolio" data-screen-label="05 Portfolio" className="section-pad" style={{ maxWidth:1280, margin:'0 auto' }}>
         {/* Header */}
         <div className="reveal" style={{ marginBottom:80 }}>
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Réalisations</div>
@@ -574,7 +886,7 @@ function App() {
               </div>
             </div>
             {/* Video grid */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+            <div className="grid-3" style={{ display:'grid', gap:20 }}>
               {[0,1,2].map(vi => <VideoCard key={vi} src={videos[vi]} />)}
             </div>
           </div>
@@ -582,7 +894,7 @@ function App() {
       </section>
 
       {/* ── TARIFS SUR-MESURE ────────────────────────────── */}
-      <section data-screen-label="05 Tarifs" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+      <section data-screen-label="05 Tarifs" className="section-pad" style={{ maxWidth:1280, margin:'0 auto' }}>
         <div className="reveal" style={{ textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:28 }}>
           <Tag>Devis personnalisé</Tag>
           <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(40px,5.5vw,80px)', lineHeight:1.0, letterSpacing:'-0.02em', maxWidth:800 }}>
@@ -592,7 +904,7 @@ function App() {
             Nous ne vendons pas de packs standardisés. On discute de vos objectifs, on analyse votre marché, et on construit une offre sur-mesure qui colle à <em>votre</em> activité.
           </p>
           <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginTop:12 }}>
-            <Btn primary>📞 07 66 27 98 30</Btn>
+            <PhoneBtn dark />
             <Btn outline>✉️ nayroagency@gmail.com</Btn>
           </div>
           <p style={{ fontSize:12, color:'rgba(255,255,255,0.25)', letterSpacing:'0.06em', marginTop:4 }}>
@@ -603,14 +915,14 @@ function App() {
 
       {/* ── TESTIMONIALS ─────────────────────────────────── */}
       <section id="clients" data-screen-label="06 Témoignages" style={{ background:'#111', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
+        <div className="section-pad" style={{ maxWidth:1280, margin:'0 auto' }}>
           <div className="reveal" style={{ marginBottom:64 }}>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:20 }}>Témoignages</div>
             <h2 style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', textTransform:'uppercase', fontSize:'clamp(36px,4.5vw,60px)', lineHeight:1.0, letterSpacing:'-0.02em' }}>
               ILS NOUS FONT CONFIANCE
             </h2>
           </div>
-          <div className="reveal reveal-delay-1" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+          <div className="reveal reveal-delay-1 grid-3" style={{ display:'grid', gap:20 }}>
             {[
               { logo:'PIZZALIF', img:'assets/pizzalif.jpg', name:'Pizzalif', role:'Restaurant — Client Nayro', quote:'En seulement 1 mois avec Nayro Agency, on a généré plus de 20 millions de vues et gagné plus de 45 000 abonnés. Résultats immédiats et concrets.' },
               { logo:"O'GRAM",   img:'assets/ogram.png',    name:"O'Gram",   role:'Restaurant — Client Nayro', quote:"Depuis qu'on bosse avec Nayro, on voit arriver plein de nouveaux visages au restaurant. Les réseaux sociaux ramènent une vraie clientèle." },
@@ -637,9 +949,9 @@ function App() {
       </section>
 
       {/* ── CTA FINAL ────────────────────────────────────── */}
-      <section id="contact" data-screen-label="07 Contact CTA" style={{ maxWidth:1280, margin:'0 auto', padding:'120px 40px' }}>
-        <div className="reveal" style={{
-          background:'#fff', borderRadius:32, padding:'80px 80px',
+      <section id="contact" data-screen-label="07 Contact CTA" className="section-pad" style={{ maxWidth:1280, margin:'0 auto' }}>
+        <div className="reveal cta-box" style={{
+          background:'#fff', borderRadius:32,
           textAlign:'center', color:'#000',
         }}>
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)', marginBottom:20 }}>PRÊT À DÉCOLLER ?</div>
@@ -649,21 +961,36 @@ function App() {
           <p style={{ fontSize:17, color:'rgba(0,0,0,0.55)', maxWidth:520, margin:'0 auto 40px', lineHeight:1.75 }}>
             Audit gratuit de votre présence digitale. Réponse sous 24h. Aucun engagement.
           </p>
-          <div style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap' }}>
-            <button style={{ padding:'16px 36px', borderRadius:999, background:'#000', color:'#fff', border:'none', fontFamily:'Inter,sans-serif', fontWeight:700, fontSize:15, cursor:'pointer', letterSpacing:'0.02em' }}>📞 07 66 27 98 30</button>
-            <button style={{ padding:'16px 36px', borderRadius:999, background:'transparent', color:'#000', border:'1.5px solid rgba(0,0,0,0.25)', fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:15, cursor:'pointer' }}>✉ nayroagency@gmail.com</button>
+          <div className="cta-btns" style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap' }}>
+            <PhoneBtn btnStyle="outline" style={{}} />
+            <a href="mailto:nayroagency@gmail.com?subject=Demande%20de%20devis%20-%20Nayro%20Agency&body=Bonjour%2C%0A%0AJe%20suis%20int%C3%A9ress%C3%A9(e)%20par%20vos%20services%20de%20Community%20Management.%0A%0AVoici%20quelques%20informations%20sur%20mon%20projet%20%3A%0A-%20Mon%20activit%C3%A9%20%3A%20%0A-%20Mon%20budget%20estim%C3%A9%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20en%20discuter.%0A%0ACordialement%2C" style={{ padding:'16px 36px', borderRadius:999, background:'transparent', color:'#000', border:'1.5px solid rgba(0,0,0,0.25)', fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:15, cursor:'pointer', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>✉ nayroagency@gmail.com</a>
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────── */}
       <footer style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'48px 40px' }}>
-        <div style={{ maxWidth:1280, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:24 }}>
-          <div style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:18 }}>NAYRO AGENCY</div>
-          <div style={{ display:'flex', gap:32, fontSize:13, color:'rgba(255,255,255,0.35)' }}>
-            {['Instagram','TikTok','LinkedIn','nayroagency@gmail.com'].map(item => (
-              <span key={item} style={{ cursor:'pointer' }}>{item}</span>
+        <div className="footer-inner" style={{ maxWidth:1280, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:24 }}>
+          <div onClick={() => window.scrollTo({ top:0, behavior:'smooth' })}
+            style={{ fontFamily:'Archivo, sans-serif', fontWeight:900, fontStyle:'italic', fontSize:18, cursor:'pointer', transition:'opacity 0.2s ease, transform 0.2s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.opacity='0.75'; e.currentTarget.style.transform='scale(1.03)'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='scale(1)'; }}
+          >NAYRO AGENCY</div>
+          <div className="footer-links" style={{ display:'flex', gap:32, fontSize:13, color:'rgba(255,255,255,0.35)' }}>
+            {[
+              { label:'Instagram', href:'https://www.instagram.com/nayro.agency' },
+              { label:'TikTok',    href:'https://www.tiktok.com/@nayroagency' },
+              { label:'LinkedIn',  href:'https://www.linkedin.com/in/ilies-alioui-b75a072b3' },
+            ].map(({ label, href }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                style={{ color:'rgba(255,255,255,0.35)', textDecoration:'none', cursor:'pointer', transition:'color 0.2s ease' }}
+                onMouseEnter={e => e.currentTarget.style.color='#fff'}
+                onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.35)'}>{label}</a>
             ))}
+            <a href="mailto:nayroagency@gmail.com"
+              style={{ color:'rgba(255,255,255,0.35)', textDecoration:'none', cursor:'pointer', transition:'color 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.color='#fff'}
+              onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.35)'}>nayroagency@gmail.com</a>
           </div>
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.2)' }}>© 2026 Nayro Agency. Tous droits réservés.</div>
         </div>
